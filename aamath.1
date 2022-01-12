@@ -1,0 +1,35 @@
+.TH aamath 1 "March 1, 2005" "Version 0.1" "USER COMMANDS"
+.SH NAME
+aamath \- renders mathematical expressions as ASCII art
+.SH SYNOPSIS
+.B aamath
+
+.SH DESCRIPTION
+.PP
+.I aamath
+is a program that accepts math expressions in infix notation and
+outputs them as ASCII art renderings.
+
+.SH EXPRESSIONS
+Other than the standard operation symbols, which follow the usual precedence
+rules,
+.I aamath
+also accepts:
+.IP sqrt(expr)
+Square root of expr.
+.IP root(expr,\ ord)
+Root of expr of order ord.
+.IP lim(expr,\ var\ \->\ lim)
+Limit of expr with var tending to lim.
+.IP int(expr,\ var\ [=\ from\ ..\ to])
+Integral of expr with respect to var with limits from and to.
+.IP sum(expr,\ var\ [=\ from\ ..\ to])
+Sum of expr for values of var in the interval.
+.IP prod(expr,\ var\ [=\ from\ ..\ to])
+Product of expr for values of var in the interval.
+
+.SH BUGS
+It needs a real man page. The examples provide a better reference.
+
+.SH AUTHOR
+Mauro Persano (mauro_persano (at) yahoo.com)
