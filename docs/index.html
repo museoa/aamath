@@ -1,0 +1,111 @@
+<html>
+<head>
+<title>aamath</title>
+</head>
+<body bgcolor="white">
+<center>
+<p>
+<h1>aamath<br><font size=4>
+<i>ASCII art mathematics</i></font>
+<hr>
+</h1>
+</center>
+
+<h3>Huh?</h3>
+
+<ul>
+
+<p><b>aamath</b> is a program that reads mathematical expressions in infix
+notation and renders them as ASCII art. It may be useful to send mathematics
+through text-only media, such as e-mail or newsgroups.
+
+<p>As a simple example, the output for an expression such as
+<p><table>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+<td><tt>A_OPR = x*sqrt(x^2-1)/2 - int(sqrt(t^2-1), t = 1 .. x)</tt>
+</td></tr></table>
+<p>will look like
+<p><table>
+<tr><td>
+&nbsp;&nbsp;&nbsp;&nbsp;
+</td>
+<td>
+<pre>
+                        x
+            ______     /
+           / 2        |    ______
+       x \/ x  - 1    |   / 2
+A    = ----------- -  | \/ t  - 1 dt
+ OPR        2         |
+                      |
+                     /
+                      1
+</pre></td></tr></table>
+<p>Other than the usual operations (addition, subtraction,
+multiplication, division, and exponentiation), <b>aamath</b> can also handle functions,
+integrals, limits, sums, products, matrices and vectors.
+<a href="testcases.out.txt">Here</a> is a more thorough set of examples.
+<p><b>aamath</b> is a command-line utility. It was successfully compiled and
+tested on Linux, FreeBSD, Cygwin, and DJGPP.
+It is written in C++, and will need lex and yacc to compile. GNU readline is
+also recommended, although not essential.
+
+</ul>
+
+<h3>ChangeLog</h3>
+
+<ul>
+
+<pre>
+2005-06-22
+
+	* Version 0.3 released
+	* Input equations from command line arguments  -- bi
+	* Prettify man page  -- bi
+
+2005-03-07
+
+	* Version 0.2 released
+	* Slightly improved man page
+	* Determinants, nabla, better radical rendering
+
+2005-03-02
+
+	* Version 0.1 released
+	* First release
+</pre>
+
+</ul>
+
+<h3>Thanks</h3>
+
+<ul>
+<li><a href="http://www.fzort.org/bi/">bicoherent</a> - useful suggestions and patches.
+<li><a href="http://openbsd.dead-parrot.de">Matthias Kilian</a> - feedback and OpenBSD port.
+</ul>
+
+<h3>Download</h3>
+
+<ul>
+The current release of <b>aamath</b> as a source tarball is:
+
+<p>
+<ul>
+<h3><a href="aamath-0.3.tar.gz">aamath-0.3.tar.gz</a></h3>
+</ul>
+
+</ul>
+
+<p><br>
+
+<p>E-mail the author: <tt>mauro_persano at yahoo dot com</tt>
+
+<center>
+<font size=-1>
+<p><i>Last modified: Wed Jun 22 17:34:48 PST 2005</i>
+</font>
+</center>
+
+</font>
+</body>
+</html>
