@@ -35,19 +35,22 @@ extern int get_input(char *buf, int max_size);
 			}
 "..."			{ return ELLIPSIS; }
 [0-9]*"."?[0-9]*([eE][+-]?[0-9]+)?("...")? {
-				yylval.constval = new Float(yytext); 
-				return FLOAT;
+				yylval.constval = new Real(yytext); 
+				return REAL;
 			}
+abs			{ return ABS; }
 quit			{ return QUIT; }
 inf			{ return INF; }
 pi			{ return PI; }
+nabla			{ return NABLA; }
 sqrt			{ return SQRT; }
 root			{ return ROOT; }
 int			{ return INT; }
 sum			{ return SUM; }
 prod			{ return PROD; }
 lim			{ return LIM; }
-a?(sin|cos|tan|sinh|cosh|tanh)		{
+det			{ return DET; }
+(arc)?(sin|cos|tan|sec|csc|cot)h? {
 				yylval.symval = new Symbol(yytext);
 				return TRIGFN;
 			}

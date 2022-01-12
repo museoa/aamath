@@ -1,8 +1,9 @@
-.TH aamath 1 "March 1, 2005" "Version 0.1" "USER COMMANDS"
+.TH aamath 1 "March 1, 2005" "Version 0.2" "USER COMMANDS"
 .SH NAME
 aamath \- renders mathematical expressions as ASCII art
 .SH SYNOPSIS
 .B aamath
+[ \-q | \-r ]
 
 .SH DESCRIPTION
 .PP
@@ -10,26 +11,56 @@ aamath \- renders mathematical expressions as ASCII art
 is a program that accepts math expressions in infix notation and
 outputs them as ASCII art renderings.
 
+.SH OPTIONS
+.IP -q
+Quiet mode.
+.IP -r
+More compact radicals.
+
 .SH EXPRESSIONS
-Other than the standard operation symbols, which follow the usual precedence
-rules,
+The simplest types of expression in
 .I aamath
-also accepts:
+are constants and variables. The following are recognized as constants:
+.IP number
+A number, optionally in scientific notation, optionally followed by ellipsis. Precision is limited only by available memory, since 
+numbers are represented internally as strings.
+.IP inf
+Infinity.
+.IP nabla
+The nabla operator.
+.IP ...
+Ellipsis.
+.PP
+A variable is represented by an alphabetic character, optionally followed by a sequence of alphanumeric characters. A variable may have a subscript: these are represented by an underline character (_) followed by an expression. If followed by a backslash character (\\), the variable name will be rendered with an over score. Variables names may also be followed by one or more primes (apostrophes).
+
+Functions are represented by the function name, which follows the same syntax of variable names (including optional subscripts, over score, and primes), followed by comma-separated function arguments between parentheses. Trigonometric functions are rendered differently if they are raised to a power: the exponent will appear between the function name and the argument.
+
+Matrices are represented by a sequence of expressions between square brackets; commas separate elements of the same row, and semicolons separate rows.
+
+Other than the standard arithmetic and logical operators, which obey the usual precedence rules,
+.I aamath
+also accepts the following operations:
+.IP expr1\ ^\ expr1
+expr1 raised to expr2
+.IP ~\ expr
+Complex conjugate of the expression
+.IP expr\ !
+Factorial of the expression
+.PP
+The following special functions are also recognized:
 .IP sqrt(expr)
-Square root of expr.
+Square root of the expression.
 .IP root(expr,\ ord)
-Root of expr of order ord.
+Root of order ord of the expression.
 .IP lim(expr,\ var\ \->\ lim)
 Limit of expr with var tending to lim.
 .IP int(expr,\ var\ [=\ from\ ..\ to])
-Integral of expr with respect to var with limits from and to.
+Integral of expr with respect to var, optionally with with limits from and to.
 .IP sum(expr,\ var\ [=\ from\ ..\ to])
-Sum of expr for values of var in the interval.
+Sum of expr for values of var in the interval. The interval is optional.
 .IP prod(expr,\ var\ [=\ from\ ..\ to])
-Product of expr for values of var in the interval.
-
+Product of expr for values of var in the interval. The interval is optional.
 .SH BUGS
-It needs a real man page. The examples provide a better reference.
-
+It needs a better man page.
 .SH AUTHOR
 Mauro Persano (mauro_persano (at) yahoo.com)

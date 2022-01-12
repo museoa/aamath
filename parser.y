@@ -35,9 +35,10 @@ extern void yyerror(const char *str, ...);
 	Matrix::Row *mrow;
 };
 
-%token <constval> INTEGER FLOAT
+%token <constval> INTEGER REAL
 %token <symval> IDENTIFIER TRIGFN
-%token SQRT ROOT ELLIPSIS INF RANGE INT SUM PROD QUIT LIM PI ARROW
+%token SQRT ROOT ELLIPSIS INF RANGE INT SUM PROD QUIT LIM PI NABLA ARROW
+%token DET ABS
 %right '=' '<' '>' LESSEQ GTEQ
 %left '-' '+'
 %left '*' '/'
@@ -52,7 +53,7 @@ extern void yyerror(const char *str, ...);
 %type <exprvec> subscr_id_list
 %type <args> fn_args
 %type <constval> constant
-%type <matrix> matrix
+%type <matrix> matrix matrix_opt_det matrix_rows
 %type <mrow> matrix_row
 
 %%
@@ -73,6 +74,7 @@ expr
 : constant			{ $$ = $1; }
 | opt_conj_symbol		{ $$ = $1; }
 | SQRT '(' expr ')'		{ $$ = new Sqrt($3); }
+| ABS '(' expr ')'		{ $$ = new Abs($3); }
 | ROOT '(' expr ',' expr ')'	{ $$ = new Root($3, $5); }
 | INT '(' expr ',' expr ')'	{ $$ = new Integral($3, $5); }
 | INT '(' expr ',' expr '=' expr RANGE expr ')'
@@ -130,7 +132,7 @@ expr
 	}
 | expr '!'			{ $$ = new Fact($1); }
 | '(' expr ')'			{ $$ = $2; }
-| '[' matrix ']'		{ $$ = $2; }
+| matrix_opt_det		{ $$ = $1; }
 ;
 
 opt_conj_symbol
@@ -182,19 +184,29 @@ fn_args
 
 constant
 : INTEGER			{ $$ = $1; }
-| FLOAT				{ $$ = $1; }
+| REAL				{ $$ = $1; }
 | ELLIPSIS			{ $$ = new Ellipsis(); }
 | INF				{ $$ = new Infinity(); }
 | PI				{ $$ = new Pi(); }
+| NABLA				{ $$ = new Nabla(); }
 ;
 
 id
 : IDENTIFIER			{ $$ = $1; }
 ;
 
+matrix_opt_det
+: matrix			{ $$ = $1; }
+| DET matrix 			{ $2->set_det(); $$ = $2; }
+;
+
 matrix
+: '[' matrix_rows ']'		{ $$ = $2; }
+;
+
+matrix_rows
 : matrix_row			{ $$ = new Matrix(); $$->add_row($1); }
-| matrix ';' matrix_row		{ $1->add_row($3); $$ = $1; }
+| matrix_rows ';' matrix_row	{ $1->add_row($3); $$ = $1; }
 ;
 
 matrix_row

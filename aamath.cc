@@ -20,7 +20,7 @@
 #endif
 #include "version.h"
 
-static char *aamath_prompt = "aamath> ";
+static const char *aamath_prompt = "aamath> ";
 
 #ifdef USE_READLINE
 static char *line_read;
@@ -30,7 +30,9 @@ static bool eol_read;
 
 extern int yyparse();
 
-bool interactive = false;
+bool interactive	= false;
+bool quiet_mode		= false;
+bool big_radicals	= true;
 
 int
 get_input(char *buf, int max_size)
@@ -83,7 +85,7 @@ void
 prompt()
 {
 #ifndef USE_READLINE
-	if (interactive) {
+	if (interactive && !quiet_mode) {
 		printf("%s", aamath_prompt);
 		fflush(stdout);
 	}
@@ -93,8 +95,10 @@ prompt()
 void
 banner()
 {
-	puts(VERSION);
-	fflush(stdout);
+	if (!quiet_mode) {
+		puts(VERSION);
+		fflush(stdout);
+	}
 }
 
 void
@@ -107,10 +111,46 @@ yyerror(const char *str, ...)
 	putchar('\n');
 }
 
+void
+usage()
+{
+	fprintf(stderr, VERSION" - ASCII art mathematics\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Usage: aamath [options]\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Options are:\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "  -r   narrower radicals\n");
+	fprintf(stderr, "  -q   quiet mode\n");
+
+	exit(1);
+}
+
 int
 main(int argc, char *argv[])
 {
 	interactive = isatty(0);
+
+	int c;
+
+	while ((c = getopt(argc, argv, "rqh")) != EOF) {
+		switch (c) {
+			case 'r':
+				big_radicals = false;
+				break;
+
+			case 'q':
+				quiet_mode = true;
+				break;
+
+			case 'h':
+			default:
+				usage();
+		}
+	}
+
+	if (argc > optind)
+		usage();
 
 	int rv = 0;
 
@@ -122,7 +162,9 @@ main(int argc, char *argv[])
 
 		rv = yyparse();
 #else
-		while ((line_read = readline(aamath_prompt)) != NULL) {
+		const char *rl_prompt = quiet_mode ? "" : aamath_prompt;
+
+		while ((line_read = readline(rl_prompt)) != NULL) {
 			if (*line_read) {
 				if (!strcmp(line_read, "quit")) {
 					free(line_read);

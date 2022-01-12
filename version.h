@@ -10,4 +10,4 @@
  *
  */
 
-#define VERSION "aamath version 0.1"
+#define VERSION "aamath version 0.2"

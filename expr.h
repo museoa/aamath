@@ -57,10 +57,11 @@ typedef std::vector<Expression *> ExprVector;
 
 enum ConstantType {
 	CT_Integer,
-	CT_Float,
+	CT_Real,
 	CT_Ellipsis,
 	CT_Infinity,
 	CT_Pi,
+	CT_Nabla,
 };
 
 class Constant : public Expression {
@@ -88,10 +89,10 @@ class Integer : public Constant {
 	std::string value;
 };
 
-class Float : public Constant {
+class Real : public Constant {
   public:
-	Float(char *value_);
-	virtual ~Float();
+	Real(char *value_);
+	virtual ~Real();
 
 	virtual CanvasPtr render() const;
 
@@ -119,6 +120,20 @@ class Pi : public Constant {
   public:
 	Pi();
 	virtual ~Pi();
+
+	virtual bool accept_expn() const;
+	virtual void set_expn(Expression *expn_);
+
+	virtual CanvasPtr render() const;
+
+  protected:
+	Expression *expn;
+};
+
+class Nabla : public Constant {
+  public:
+	Nabla();
+	virtual ~Nabla();
 
 	virtual bool accept_expn() const;
 	virtual void set_expn(Expression *expn_);
@@ -177,6 +192,7 @@ enum UnaryOpType {
 	UT_Fact,
 	UT_Conj,
 	UT_Bar,
+	UT_Abs,
 };
 
 class UnaryOp : public Expression {
@@ -233,6 +249,15 @@ class Bar : public UnaryOp {
   public:
 	Bar(Expression *down_);
 	virtual ~Bar();
+
+	virtual CanvasPtr render() const;
+	virtual bool need_parens() const;
+};
+
+class Abs : public UnaryOp {
+  public:
+	Abs(Expression *down_);
+	virtual ~Abs();
 
 	virtual CanvasPtr render() const;
 	virtual bool need_parens() const;
@@ -582,6 +607,8 @@ class Matrix : public Expression {
 	virtual bool accept_expn() const;
 	virtual void set_expn(Expression *expn_);
 
+	void set_det();
+
 	int num_rows() const;
 	int num_cols() const;
 
@@ -600,6 +627,7 @@ class Matrix : public Expression {
 
   protected:
 	std::vector<Row *> rows;
+	bool is_det;
 };
 
 std::ostream&

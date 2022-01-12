@@ -18,6 +18,8 @@
 
 static Integer ZERO("0");
 
+extern bool big_radicals;
+
 static inline int
 max(int a, int b)
 {
@@ -109,16 +111,16 @@ Integer::render() const
 	return c;
 }
 
-Float::Float(char *value_)
-: Constant(CT_Float)
+Real::Real(char *value_)
+: Constant(CT_Real)
 , value(value_)
 { }
 
-Float::~Float()
+Real::~Real()
 { }
 
 CanvasPtr
-Float::render() const
+Real::render() const
 {
 	CanvasPtr c;
 
@@ -201,6 +203,44 @@ Pi::render() const
 	return c;
 }
 
+Nabla::Nabla()
+: Constant(CT_Nabla)
+, expn(NULL)
+{ }
+
+Nabla::~Nabla()
+{
+	if (expn != NULL)
+		delete expn;
+}
+
+bool
+Nabla::accept_expn() const
+{
+	return expn == NULL;
+}
+
+void
+Nabla::set_expn(Expression *expn_)
+{
+	assert(expn == NULL);
+
+	expn = expn_;
+}
+
+CanvasPtr
+Nabla::render() const
+{
+	CanvasPtr c;
+
+	c->paste_string("__", -1, 0);
+	c->paste_string("\\/", 0, 0);
+
+	if (expn != NULL)
+		c->paste(*(expn->render()), -1, 2, Canvas::VA_Top);
+
+	return c;
+}
 
 //
 //	V a r i a b l e
@@ -426,17 +466,26 @@ Sqrt::render() const
 
 	CanvasPtr canvas;
 
-	canvas->paste(*canvas_down, 1, size_down.rows + 1, Canvas::VA_Bottom);
+	(*canvas)[size_down.descent][0] = '\\';
 
-	(*canvas)[size_down.rows][0] = '\\';
+	int c;
 
-	for (int i = 0; i < size_down.rows; i++)
-		(*canvas)[size_down.rows - i][1 + i] = '/';
+	if (big_radicals) {
+		c = size_down.rows + 1;
+
+		for (int i = 0; i < size_down.rows; i++)
+			(*canvas)[size_down.descent - i][1 + i] = '/';
+	} else {
+		c = 2;
+
+		for (int i = 0; i < size_down.rows; i++)
+			(*canvas)[-size_down.ascent + i][1] = '|';
+	}
+
+	canvas->paste(*canvas_down, 0, c);
 
 	for (int i = 0; i < size_down.cols; i++)
-		(*canvas)[0][size_down.rows + 1 + i] = '_';
-
-	canvas->center();
+		(*canvas)[-size_down.ascent - 1][c + i] = '_';
 
 	return canvas;
 }
@@ -540,6 +589,37 @@ Bar::render() const
 
 bool
 Bar::need_parens() const
+{
+	return false;
+}
+
+Abs::Abs(Expression *down_)
+: UnaryOp(UT_Abs, down_)
+{ }
+
+Abs::~Abs()
+{ }
+
+CanvasPtr
+Abs::render() const
+{
+	CanvasPtr canvas_down = down->render();
+
+	Size size_down = canvas_down->size();
+
+	CanvasPtr canvas;
+
+	canvas->paste(*canvas_down, 0, 1);
+
+	for (int i = 0; i < size_down.rows; i++)
+		(*canvas)[-size_down.ascent + i][0] = 
+		(*canvas)[-size_down.ascent + i][size_down.cols + 1] = '|';
+
+	return canvas;
+}
+
+bool
+Abs::need_parens() const
 {
 	return false;
 }
@@ -783,12 +863,6 @@ Mul::render() const
 
 	int c = size_left.cols + (left->need_parens() ? 3 : 1);
 
-/*	if (left->is_constant() && right->is_constant()) {
-		(*canvas)[0][c] = 'X';
-
-		c += 2;
-	} */
-
 	canvas->paste_with_parens(*(right->render()), 0, c,
 	  right->need_parens());
 
@@ -891,28 +965,32 @@ Root::render() const
 	CanvasPtr canvas_right = right->render();
 	Size size_right = canvas_right->size();
 
-	int d = size_right.cols - size_left.rows - 1;
+	int c = big_radicals ? size_left.rows : 1;
+
+	int d = size_right.cols - c - 1;
 
 	if (d < 0)
 		d = 0;
 
 	CanvasPtr canvas;
 
-	canvas->paste(*canvas_left, 1, size_left.rows + 1 + d,
-	  Canvas::VA_Bottom);
+	canvas->paste(*canvas_left, 0, c + 1 + d);
 
-	canvas->paste(*canvas_right, 0,
-	  d + size_left.rows - size_right.cols + 1, Canvas::VA_Top);
+	canvas->paste(*canvas_right, -size_left.ascent - 1,
+	  d + c - size_right.cols + 1, Canvas::VA_Top);
 
-	(*canvas)[size_left.rows][d] = '\\';
-
-	for (int i = 0; i < size_left.rows; i++)
-		(*canvas)[size_left.rows - i][1 + i + d] = '/';
+	(*canvas)[size_left.descent][0] = '\\';
 
 	for (int i = 0; i < size_left.cols; i++)
-		(*canvas)[0][size_left.rows + 1 + i + d] = '_';
+		(*canvas)[-size_left.ascent - 1][c + 1 + i + d] = '_';
 
-	canvas->center();
+	if (big_radicals) {
+		for (int i = 0; i < size_left.rows; i++)
+			(*canvas)[size_left.descent - i][1 + i + d] = '/';
+	} else {
+		for (int i = 0; i < size_left.rows; i++)
+			(*canvas)[-size_left.ascent + i][1 + d] = '|';
+	}
 
 	return canvas;
 }
@@ -1005,7 +1083,7 @@ Integral::get_rise() const
 	// otherwise calculate height according to argument height.
 
 	// this will probably result in some useless object creation/
-	// rendering/destruction, but will do until we figure out
+	// rendering/destruction overhead, but will do until we figure out
 	// a smarter way to do this.
 
 	Integral *integral = dynamic_cast<Integral *>(function);
@@ -1505,6 +1583,7 @@ operator<<(std::ostream& o, Expression& e)
 
 Matrix::Matrix()
 : Expression(ET_Matrix)
+, is_det(false)
 { }
 
 Matrix::~Matrix()
@@ -1597,14 +1676,19 @@ Matrix::render() const
 
 	w += cols + 1;
 
-	for (int i = 1; i < h - 1; i++)
-		(*canvas)[i][0] = (*canvas)[i][w + 1] = '|';
+	if (!is_det) {
+		for (int i = 1; i < h - 1; i++)
+			(*canvas)[i][0] = (*canvas)[i][w + 1] = '|';
 
-	(*canvas)[0][0] = '/';
-	(*canvas)[0][w + 1] = '\\';
+		(*canvas)[0][0] = '/';
+		(*canvas)[0][w + 1] = '\\';
 
-	(*canvas)[h - 1][0] = '\\';
-	(*canvas)[h - 1][w + 1] = '/';
+		(*canvas)[h - 1][0] = '\\';
+		(*canvas)[h - 1][w + 1] = '/';
+	} else {
+		for (int i = 0; i < h; i++)
+			(*canvas)[i][0] = (*canvas)[i][w + 1] = '|';
+	}
 
 	canvas->center();
 
@@ -1639,6 +1723,12 @@ int
 Matrix::num_rows() const
 {
 	return rows.size();
+}
+
+void
+Matrix::set_det()
+{
+	is_det = true;
 }
 
 int

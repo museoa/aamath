@@ -115,7 +115,7 @@ Canvas::paste(const Canvas& cn, int r, int c, Align a)
 void
 Canvas::center()
 {
-	first_row = - nrows/2 - nrows%2;
+	first_row = - nrows/2; // - nrows%2;
 }
 
 Size
@@ -347,19 +347,3 @@ CanvasPtr::operator*()
 {
 	return *canvas;
 }
-
-#if 0
-int
-main()
-{
-	Canvas c;
-
-	Canvas d;
-	d[0][0] = 'a';
-
-	c.paste(d, 0, 0);
-	c.paste(d, 0, 2);
-
-	std::cout << c;
-}
-#endif
