@@ -20,6 +20,6 @@ To compile without readline:
 
   remove -DUSE_READLINE and -lreadline and -ltermcamp from Makefile.good
 
-Please email me any comments:
+Please email any comments, suggestions and patches to:
 
   mauro_persano at yahoo dot com

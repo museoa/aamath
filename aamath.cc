@@ -12,9 +12,10 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 #include <unistd.h>
-#ifdef USE_READLINE
 #include <stdlib.h> // free()
+#ifdef USE_READLINE
 #include <readline/readline.h>
 #include <readline/history.h>
 #endif
@@ -24,47 +25,55 @@ static const char *aamath_prompt = "aamath> ";
 
 #ifdef USE_READLINE
 static char *line_read;
+#endif
 static char *cur_line_pos;
 static bool eol_read;
-#endif
+static int line_len;
 
 extern int yyparse();
 
 bool interactive	= false;
 bool quiet_mode		= false;
 bool big_radicals	= true;
+int (*get_input)(char *, int);
 
-int
-get_input(char *buf, int max_size)
+static int
+get_input_from_buf(char *buf, int max_size)
+{
+	int rv;
+
+	// XXX: fix the grammar so we don't need this ugly hack
+
+	if (line_len == 0) {
+		if (eol_read) {
+			rv = 0;
+		} else {
+			// send a terminating '\n'
+			rv = 1;
+			buf[0] = '\n';
+			eol_read = true;
+		}
+	} else {
+		if (max_size > line_len)
+			max_size = line_len;
+
+		memcpy(buf, cur_line_pos, max_size);
+
+		cur_line_pos += max_size;
+		line_len -= max_size;
+
+		rv = max_size;
+	}
+
+	return rv;
+}
+
+static int
+get_input_from_stdin(char *buf, int max_size)
 {
 	int rv;
 
 	if (interactive) {
-#ifdef USE_READLINE
-		int line_len = strlen(cur_line_pos);
-
-		// XXX: fix the grammar so we don't need this ugly hack
-
-		if (line_len == 0) {
-			if (eol_read) {
-				rv = 0;
-			} else {
-				// send a terminating '\n'
-				rv = 1;
-				buf[0] = '\n';
-				eol_read = true;
-			}
-		} else {
-			if (max_size > line_len)
-				max_size = line_len;
-
-			memcpy(buf, cur_line_pos, max_size);
-
-			cur_line_pos += max_size;
-
-			rv = max_size;
-		}
-#else
 		int c;
 
 		if ((c = getchar()) == EOF) {
@@ -73,7 +82,6 @@ get_input(char *buf, int max_size)
 			rv = 1;
 			buf[0] = c;
 		}
-#endif
 	} else {
 		rv = fread(buf, 1, max_size, stdin);
 	}
@@ -109,6 +117,13 @@ yyerror(const char *str, ...)
 	vprintf(str, args);
 
 	putchar('\n');
+}
+
+int
+render(int (*func)(char *, int))
+{
+	get_input = func;
+	return yyparse();
 }
 
 void
@@ -149,10 +164,17 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (argc > optind)
-		usage();
-
 	int rv = 0;
+
+	if (argc > optind) {
+		do {
+			cur_line_pos = argv[optind++];
+			line_len = strlen(cur_line_pos);
+			eol_read = false;
+			rv |= render(get_input_from_buf);
+		} while (argc > optind);
+		return rv;
+	}
 
 	if (interactive) {
 		banner();
@@ -160,7 +182,7 @@ main(int argc, char *argv[])
 #ifndef USE_READLINE
 		prompt();
 
-		rv = yyparse();
+		rv = render(get_input_from_stdin);
 #else
 		const char *rl_prompt = quiet_mode ? "" : aamath_prompt;
 
@@ -174,16 +196,17 @@ main(int argc, char *argv[])
 				add_history(line_read);
 
 				cur_line_pos = line_read;
+				line_len = strlen(line_read);
 				eol_read = false;
 
-				rv = yyparse();
+				rv = render(get_input_from_buf);
 			}
 
 			free(line_read);
 		}
 #endif
 	} else {
-		rv = yyparse();
+		rv = render(get_input_from_stdin);
 	}
 
 	return rv;
